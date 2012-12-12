@@ -16,6 +16,11 @@ class Sample(object):
     def __init__(self, xml):
         self.xml = xml
 
+class Device(object):
+    def __init__(self, xml):
+        self.xml = xml
+        self.samples = get_sample_refs(self.xml)
+
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='Manage sample references of Ableton Live device files.')
     argparser.add_argument('device', nargs='+', help='Device files (.adg and .adv)')
@@ -23,8 +28,8 @@ if __name__ == '__main__':
     args = argparser.parse_args()
 
     for devicePath in args.device:
-        device = open_device(devicePath)
-        sample_refs = get_sample_refs(device)
-        for sample_ref in sample_refs:
-            sample = Sample(sample_ref)
+        device_xml = open_device(devicePath)
+        device = Device(device_xml)
+
+        for sample in device.samples:
             print(sample)
