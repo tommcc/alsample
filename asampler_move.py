@@ -15,11 +15,19 @@ def get_sample_refs(xml):
 class Sample(object):
     def __init__(self, xml):
         self.xml = xml
+        self.file_ref_xml = xml.find('FileRef')
+        self.relative_path_xml = self.file_ref_xml.find('RelativePath')
+        self.path_hint_xml = self.file_ref_xml.find('./SearchHint/PathHint')
+
+        # Calculate library path.
+        relative_path_elements = [path_element.get('Dir') for path_element in self.relative_path_xml.findall('RelativePathElement')]
+        relative_path_elements.append(self.file_ref_xml.find('Name').get('Value'))
+        self.library_path = '/'.join(relative_path_elements)
 
 class Device(object):
     def __init__(self, xml):
         self.xml = xml
-        self.samples = get_sample_refs(self.xml)
+        self.samples = [Sample(sample_xml) for sample_xml in get_sample_refs(self.xml)]
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='Manage sample references of Ableton Live device files.')
@@ -32,4 +40,4 @@ if __name__ == '__main__':
         device = Device(device_xml)
 
         for sample in device.samples:
-            print(sample)
+            print(sample.library_path)
