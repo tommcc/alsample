@@ -4,6 +4,20 @@ import argparse
 import gzip
 import xml.etree.cElementTree as ET
 
+PATH_TYPES = {
+    'MISSING': 0,
+    'EXTERNAL': 1,
+    'LIBRARY': 2,
+    'CURRENT_PROJECT': 3
+}
+
+FILE_TYPES = [
+    'adv',
+    'adg',
+    'alc',
+    'als'
+]
+
 def open_device(path):  
     with gzip.open(path, 'r') as f:
         xml = f.read()
