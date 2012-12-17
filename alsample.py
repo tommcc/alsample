@@ -18,7 +18,7 @@ FILE_TYPES = [
     'als'
 ]
 
-def open_device(path):  
+def open_file(path):  
     with gzip.open(path, 'r') as f:
         xml = f.read()
     return ET.fromstring(xml)
@@ -38,20 +38,15 @@ class Sample(object):
         relative_path_elements.append(self.file_ref_xml.find('Name').get('Value'))
         self.library_path = '/'.join(relative_path_elements)
 
-class Device(object):
-    def __init__(self, xml):
-        self.xml = xml
-        self.samples = [Sample(sample_xml) for sample_xml in get_sample_refs(self.xml)]
-
 if __name__ == '__main__':
-    argparser = argparse.ArgumentParser(description='Manage sample references of Ableton Live device files.')
-    argparser.add_argument('device', nargs='+', help='Device files (.adg and .adv)')
+    argparser = argparse.ArgumentParser(description='Manage sample references of Ableton Live files.')
+    argparser.add_argument('file', nargs='+', help='Any files that contain sample references.')
 
     args = argparser.parse_args()
 
-    for devicePath in args.device:
-        device_xml = open_device(devicePath)
-        device = Device(device_xml)
+    for filePath in args.file:
+        file_xml = open_file(filePath)
+        samples = [Sample(sample_xml) for sample_xml in get_sample_refs(file_xml)]
 
-        for sample in device.samples:
+        for sample in samples:
             print(sample.library_path)
