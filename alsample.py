@@ -41,12 +41,18 @@ class Sample(object):
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='Manage sample references in Ableton Live file formats.')
     argparser.add_argument('file', nargs='+', help='Any files that contain sample references.')
+    argparser.add_argument('--list', '-l', action='store_true', help='List referenced samples.')
 
     args = argparser.parse_args()
+
+    if not args.list:
+        print('Nothing to do.')
+        exit(1)
 
     for filePath in args.file:
         file_xml = open_file(filePath)
         samples = [Sample(sample_xml) for sample_xml in get_sample_refs(file_xml)]
 
-        for sample in samples:
-            print(sample.library_path)
+        if args.list:
+            for sample in samples:
+                print(sample.library_path)
