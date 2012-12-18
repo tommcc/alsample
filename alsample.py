@@ -39,7 +39,7 @@ class Sample(object):
         self.library_path = '/'.join(relative_path_elements)
 
 if __name__ == '__main__':
-    argparser = argparse.ArgumentParser(description='Manage sample references of Ableton Live files.')
+    argparser = argparse.ArgumentParser(description='Manage sample references in Ableton Live file formats.')
     argparser.add_argument('file', nargs='+', help='Any files that contain sample references.')
 
     args = argparser.parse_args()
