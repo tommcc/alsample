@@ -62,7 +62,7 @@ class Sample(object):
 
         # Calculate abs path.
         if self.relative_path_type == PATH_TYPE_LIBRARY:
-            self.absolute_path = os.path.join(self.library, self.relative_path)
+            self.absolute_path = os.path.abspath(os.path.join(self.library, self.relative_path))
 
         self.path_hint_xml = self.file_ref_xml.find('./SearchHint/PathHint')
 
