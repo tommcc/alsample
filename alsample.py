@@ -84,11 +84,18 @@ if __name__ == '__main__':
     if args.library:
         validate_library_path(args.library)
 
-    for filePath in args.file:
-        file_xml = open_file(filePath)
-        samples = [Sample(sample_xml, library=args.library) for sample_xml in get_sample_refs(file_xml)]
-        num_samples = len(samples)
+    files = args.file
+    samples_by_file = {}
 
+    for file_path in files:
+        file_xml = open_file(file_path)
+        samples = [Sample(sample_xml, library=args.library) for sample_xml in get_sample_refs(file_xml)]
+        samples_by_file[file_path] = samples
+    print samples_by_file
+
+    for (file_path, samples) in samples_by_file.items():
+        print('\nFile %s:' % (file_path))
+        num_samples = len(samples)
         for (i, sample) in enumerate(samples):
             print('\nSample %d/%d, %s, %s' % (i + 1, num_samples, sample.name, sample.absolute_path))
             if args.check:
