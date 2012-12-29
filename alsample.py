@@ -50,6 +50,8 @@ class Sample(object):
 
         self.file_ref_xml = xml.find('FileRef')
 
+        self.name = self.file_ref_xml.find('Name').get('Value')
+
         self.relative_path_type_xml = self.file_ref_xml.find('RelativePathType')
         self.relative_path_type = int(self.relative_path_type_xml.get('Value'))
 
@@ -57,7 +59,7 @@ class Sample(object):
 
         # Calculate relative path.
         relative_path_elements = [path_element.get('Dir') for path_element in self.relative_path_xml.findall('RelativePathElement')]
-        relative_path_elements.append(self.file_ref_xml.find('Name').get('Value'))
+        relative_path_elements.append(self.name)
         self.relative_path = os.path.join(*relative_path_elements)
 
         # Calculate abs path.
@@ -85,19 +87,10 @@ if __name__ == '__main__':
     for filePath in args.file:
         file_xml = open_file(filePath)
         samples = [Sample(sample_xml, library=args.library) for sample_xml in get_sample_refs(file_xml)]
+        num_samples = len(samples)
 
-        if args.list or args.check:
-            for (i, sample) in enumerate(samples):
-                print('\nSample %d' % (i + 1))
-                print('Path type: %s' % PATH_TYPE_LABELS[sample.relative_path_type])
-                print(sample.relative_path)
-                print(sample.absolute_path)
-
-        if args.check:
-            for (i, sample) in enumerate(samples):
-                print('\nSample %d' % (i + 1))
-                print('Path type: %s' % PATH_TYPE_LABELS[sample.relative_path_type])
-                print(sample.relative_path)
-                print(sample.absolute_path)
+        for (i, sample) in enumerate(samples):
+            print('\nSample %d/%d, %s, %s' % (i + 1, num_samples, sample.name, sample.absolute_path))
+            if args.check:
                 exists = os.path.exists(sample.absolute_path)
                 print('Exists: %s' % exists)
