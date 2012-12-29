@@ -3,6 +3,7 @@
 import argparse
 import gzip
 import os
+import re
 import xml.etree.cElementTree as ET
 
 PATH_TYPE_MISSING = 0
@@ -24,8 +25,22 @@ FILE_TYPES = [
     'als'
 ]
 
+FILE_TYPES_REGEX = re.compile(
+    '\.(%s)$' % '|'.join(FILE_TYPES),
+    re.IGNORECASE
+)
+
 class LibraryException(Exception):
     pass
+
+def find_files(path):
+    results = []
+    for root, dirs, files in os.walk(path):
+        #print ('root %s, dirs %s, files %s' % (root, dirs, files))
+        for f in files:
+            if FILE_TYPES_REGEX.search(f):
+                results.append(os.path.join(root, f))
+    return results
 
 def open_file(path):  
     with gzip.open(path, 'r') as f:
@@ -84,16 +99,21 @@ if __name__ == '__main__':
     if args.library:
         validate_library_path(args.library)
 
-    files = args.file
+    # Go through input files and expand folders.
+    files = []
+    for file_path in args.file:
+        if os.path.isdir(file_path):
+            files += find_files(file_path)
+        else:
+            files.append(file_path)
+
     samples_by_file = {}
 
     for file_path in files:
         file_xml = open_file(file_path)
         samples = [Sample(sample_xml, library=args.library) for sample_xml in get_sample_refs(file_xml)]
         samples_by_file[file_path] = samples
-    print samples_by_file
 
-    for (file_path, samples) in samples_by_file.items():
         print('\nFile %s:' % (file_path))
         num_samples = len(samples)
         for (i, sample) in enumerate(samples):
