@@ -86,18 +86,16 @@ class Sample(object):
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='Manage sample references in Ableton Live file formats.')
     argparser.add_argument('file', nargs='+', help='Any files that contain sample references.')
-    argparser.add_argument('--list', action='store_true', help='List all referenced samples.')
-    argparser.add_argument('--check', action='store_true', help='Check existence of referenced samples.')
+    argparser.add_argument('--preset-base', help='Specify the base preset directory to use when syncing sample locations.')
+    argparser.add_argument('--sample-base', help='Specify the base sample folder to use when syncing sample locations.')
     argparser.add_argument('--library', help='Specifies the Ableton Library path. This must be present for any samples that specify library-specific paths.')
 
+    action_group = argparser.add_mutually_exclusive_group(required=True)
+    action_group.add_argument('--list', action='store_true', help='List all referenced samples.')
+    action_group.add_argument('--check', action='store_true', help='Check existence of referenced samples.')
+    action_group.add_argument('--sync', action='store_true', help='Attempt to move samples into a folder structure that mimics that of the presets. Requires the --sample-base and --preset-base paths to be set.')
+
     args = argparser.parse_args()
-
-    if not (args.list or args.check):
-        exit('Nothing to do.')
-
-    # Check to make sure library path provided is valid.
-    if args.library:
-        validate_library_path(args.library)
 
     # Go through input files and expand folders.
     files = []
@@ -106,6 +104,10 @@ if __name__ == '__main__':
             files += find_files(file_path)
         else:
             files.append(file_path)
+
+    # Check to make sure library path provided is valid.
+    if args.library:
+        validate_library_path(args.library)
 
     samples_by_file = {}
 
