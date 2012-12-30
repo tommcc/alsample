@@ -91,12 +91,12 @@ if __name__ == '__main__':
     subparsers = argparser.add_subparsers(dest='action')
 
     check_parser = subparsers.add_parser('check', help='Check existence of referenced samples.')
+    check_parser.add_argument('file', nargs='+', help='Any files that contain sample references.')
 
     sync_parser = subparsers.add_parser('sync', help='Attempt to move samples into a folder structure that mimics that of the presets. Requires the --sample-base and --preset-base paths to be set.')
     sync_parser.add_argument('--preset-base', required=True, help='Specify the base preset directory to use when syncing sample locations.')
     sync_parser.add_argument('--sample-base', required=True, help='Specify the base sample folder to use when syncing sample locations.')
-
-    argparser.add_argument('file', nargs='+', help='Any files that contain sample references.')
+    sync_parser.add_argument('file', nargs='+', help='Any files that contain sample references.')
 
     args = argparser.parse_args()
 
