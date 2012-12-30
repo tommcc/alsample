@@ -127,3 +127,13 @@ if __name__ == '__main__':
                 print('\nSample %d/%d, %s, %s' % (i + 1, num_samples, sample.name, sample.absolute_path))
                 exists = os.path.exists(sample.absolute_path)
                 print('Exists: %s' % exists)
+    elif args.action == 'sync':
+        for (file_path, samples) in samples_by_file.items():
+            print('\nFile %s:' % (file_path))
+            num_samples = len(samples)
+            for (i, sample) in enumerate(samples):
+                print('\nSample %d/%d, %s, %s' % (i + 1, num_samples, sample.name, sample.absolute_path))
+                preset_sync_path = file_path.replace(args.preset_base, '')
+                sample_sync_path = sample.relative_path.replace(args.sample_base, '')
+                print(preset_sync_path)
+                print(sample_sync_path)
