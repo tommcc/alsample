@@ -97,6 +97,9 @@ class Sample(object):
         if self.relative_path_type == PATH_TYPE_LIBRARY:
             self.absolute_path = os.path.abspath(os.path.join(self.library, self.relative_path))
 
+        # Set if the sample could be found.
+        self.exists = os.path.exists(self.absolute_path)
+
         self.path_hint_xml = self.file_ref_xml.find('./SearchHint/PathHint')
 
 if __name__ == '__main__':
@@ -141,8 +144,7 @@ if __name__ == '__main__':
             num_samples = len(samples)
             for (i, sample) in enumerate(samples):
                 print('\nSample %d/%d, %s, %s' % (i + 1, num_samples, sample.name, sample.absolute_path))
-                exists = os.path.exists(sample.absolute_path)
-                print('Exists: %s' % exists)
+                print('Exists: %s' % sample.exists)
     elif args.action == 'sync':
         for (file_path, samples) in samples_by_file.items():
             print('\nFile %s:' % (file_path))
