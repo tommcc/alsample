@@ -58,6 +58,22 @@ def validate_library_path(library_path):
     if not os.path.exists(library_check_path):
         raise LibraryException('Library path does not appear to be a valid Ableton Library.')
 
+def sync(preset_path, sample, preset_base, sample_base):
+    preset_relative_path = os.path.relpath(file_path, args.preset_base)
+    # Strip extension from preset name
+    preset_relative_path = os.path.splitext(preset_relative_path)[0]
+    print('preset relative path is %s' % preset_relative_path)
+
+    sample_tail = os.path.split(sample.relative_path)[1]
+    expected_path = os.path.join(args.sample_base, preset_relative_path, sample_tail)
+    expected_path = os.path.abspath(expected_path)
+    print('expected path is %s' % expected_path)
+    print('actual path is %s' % sample.absolute_path)
+
+    is_path_correct = sample.absolute_path == expected_path
+    print('correct path? %s' % is_path_correct)
+
+
 class Sample(object):
     def __init__(self, xml, library=''):
         self.xml = xml
@@ -134,16 +150,4 @@ if __name__ == '__main__':
             for (i, sample) in enumerate(samples):
                 print('\nSample %d/%d, %s' % (i + 1, num_samples, sample.name))
 
-                preset_relative_path = os.path.relpath(file_path, args.preset_base)
-                # Strip extension from preset name
-                preset_relative_path = os.path.splitext(preset_relative_path)[0]
-                print('preset relative path is %s' % preset_relative_path)
-
-                sample_tail = os.path.split(sample.relative_path)[1]
-                expected_path = os.path.join(args.sample_base, preset_relative_path, sample_tail)
-                expected_path = os.path.abspath(expected_path)
-                print('expected path is %s' % expected_path)
-                print('actual path is %s' % sample.absolute_path)
-
-                is_path_correct = sample.absolute_path == expected_path
-                print('correct path? %s' % is_path_correct)
+                sync(file_path, sample, args.preset_base, args.sample_base)
