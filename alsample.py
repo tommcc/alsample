@@ -106,6 +106,7 @@ if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='Manage sample references in Ableton Live file formats.')
 
     argparser.add_argument('--library', help='Specifies the Ableton Library path. This must be present for any samples that specify library-specific paths.')
+    argparser.add_argument('--dry-run', '-n', action='store_true', default=False, help='For any operations that make changes, only print what they would be.')
 
     subparsers = argparser.add_subparsers(dest='action')
 
@@ -118,6 +119,9 @@ if __name__ == '__main__':
     sync_parser.add_argument('file', nargs='+', help='Any files that contain sample references.')
 
     args = argparser.parse_args()
+
+    # Set dry-run
+    dry_run = args.dry_run
 
     # Go through input files and expand folders.
     files = []
