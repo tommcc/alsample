@@ -132,8 +132,18 @@ if __name__ == '__main__':
             print('\nFile %s:' % (file_path))
             num_samples = len(samples)
             for (i, sample) in enumerate(samples):
-                print('\nSample %d/%d, %s, %s' % (i + 1, num_samples, sample.name, sample.absolute_path))
-                preset_sync_path = file_path.replace(args.preset_base, '')
-                sample_sync_path = sample.relative_path.replace(args.sample_base, '')
-                print(preset_sync_path)
-                print(sample_sync_path)
+                print('\nSample %d/%d, %s' % (i + 1, num_samples, sample.name))
+
+                preset_relative_path = file_path.replace(args.preset_base, '')
+                # Strip leading separator if any.
+                preset_relative_path = preset_relative_path.lstrip(os.sep)
+                # Strip extension from preset name
+                preset_relative_path = os.path.splitext(preset_relative_path)[0]
+                print('preset relative path is %s' % preset_relative_path)
+
+                sample_tail = os.path.split(sample.relative_path)[1]
+                expected_path = os.path.join(args.sample_base, preset_relative_path, sample_tail)
+                print('expected path is %s' % expected_path)
+
+                exists = os.path.exists(expected_path)
+                print('Exists: %s' % exists)
