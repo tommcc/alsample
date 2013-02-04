@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
 import argparse
+import errno
 import gzip
 import os
 import re
+import shutil
 import xml.etree.cElementTree as ET
 
 PATH_TYPE_MISSING = 0
@@ -58,6 +60,29 @@ def validate_library_path(library_path):
     if not os.path.exists(library_check_path):
         raise LibraryException('Library path does not appear to be a valid Ableton Library.')
 
+def mkdir_p(path):
+    try:
+        os.makedirs(path)
+    except OSError as e:
+        if e.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
+
+def move_file(src, dest):
+    if dry_run:
+        print('Would move file:\n\tsrc : %s\n\tdest: %s' % (src, dest))
+    else:
+        print('Moving file:\n\tsrc : %s\n\tdest: %s' % (src, dest))
+
+        # Create destination directory if needed.
+        dest_path = os.path.split(dest)[0]
+        mkdir_p(dest_path)
+
+        #shutil.move(src, dest)
+        #TODO: replace with move after development.
+        shutil.copy2(src, dest)
+
 def sync(preset_path, sample, preset_base, sample_base):
     preset_relative_path = os.path.relpath(file_path, args.preset_base)
     # Strip extension from preset name
@@ -72,6 +97,12 @@ def sync(preset_path, sample, preset_base, sample_base):
 
     is_path_correct = sample.absolute_path == expected_path
     print('correct path? %s' % is_path_correct)
+
+    if not is_path_correct:
+        # Move file to correct location.
+        move_file(sample.absolute_path, expected_path)
+
+        # Update xml to point to new location.
 
 
 class Sample(object):
