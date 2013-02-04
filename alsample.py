@@ -121,9 +121,10 @@ class Sample(object):
         self.xml = xml
         self.library = library
 
-        self.file_ref_xml = xml.find('FileRef')
+        self.file_ref_xml = self.xml.find('FileRef')
 
-        self.name = self.file_ref_xml.find('Name').get('Value')
+        self.name_xml = self.file_ref_xml.find('Name')
+        self.name = self.name_xml.get('Value')
 
         self.relative_path_type_xml = self.file_ref_xml.find('RelativePathType')
         self.relative_path_type = int(self.relative_path_type_xml.get('Value'))
@@ -138,6 +139,7 @@ class Sample(object):
         # Calculate abs path.
         if self.relative_path_type == PATH_TYPE_LIBRARY:
             self.absolute_path = os.path.abspath(os.path.join(self.library, self.relative_path))
+        #TODO Handle other relative path types?
 
         # Set if the sample could be found.
         self.exists = os.path.exists(self.absolute_path)
