@@ -83,6 +83,17 @@ def move_file(src, dest):
         #TODO: replace with move after development.
         shutil.copy2(src, dest)
 
+def asd(path):
+    return '%s.asd' % path
+
+def move_sample(src, dest):
+    move_file(src, dest)
+
+    # Move accompanying .asd if it exists.
+    src_asd = asd(src)
+    if os.path.isfile(src_asd):
+        move_file(src_asd, asd(dest))
+
 def sync(preset_path, sample, preset_base, sample_base):
     preset_relative_path = os.path.relpath(file_path, args.preset_base)
     # Strip extension from preset name
@@ -100,7 +111,7 @@ def sync(preset_path, sample, preset_base, sample_base):
 
     if not is_path_correct:
         # Move file to correct location.
-        move_file(sample.absolute_path, expected_path)
+        move_sample(sample.absolute_path, expected_path)
 
         # Update xml to point to new location.
 
