@@ -106,10 +106,10 @@ def sync(preset_path, sample, preset_base, sample_base):
     print('expected path is %s' % expected_path)
     print('actual path is %s' % sample.absolute_path)
 
-    is_path_correct = sample.absolute_path == expected_path
-    print('correct path? %s' % is_path_correct)
+    path_is_correct = sample.absolute_path == expected_path
+    print('correct path? %s' % path_is_correct)
 
-    if not is_path_correct:
+    if not path_is_correct:
         # Move file to correct location.
         move_sample(sample.absolute_path, expected_path)
 
