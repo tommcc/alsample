@@ -114,6 +114,7 @@ def sync(preset_path, sample, preset_base, sample_base):
         move_sample(sample.absolute_path, expected_path)
 
         # Update xml to point to new location.
+        sample.set_path(expected_path)
 
 
 class Sample(object):
@@ -145,6 +146,12 @@ class Sample(object):
         self.exists = os.path.exists(self.absolute_path)
 
         self.path_hint_xml = self.file_ref_xml.find('./SearchHint/PathHint')
+
+    def set_path(self, new_path):
+        #self.relative_path_xml.clear()
+        for relpath_xml in self.relative_path_xml.findall('RelativePathElement'):
+            self.relative_path_xml.remove(relpath_xml)
+        print(ET.tostring(self.xml, pretty_print=True))
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='Manage sample references in Ableton Live file formats.')
