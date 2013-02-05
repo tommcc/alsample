@@ -35,18 +35,13 @@ FILE_TYPES_REGEX = re.compile(
 class LibraryException(Exception):
     pass
 
-def find_files(path):
+def find_presets(path):
     results = []
     for root, dirs, files in os.walk(path):
         for f in files:
             if FILE_TYPES_REGEX.search(f):
                 results.append(os.path.join(root, f))
     return results
-
-def open_file(path):  
-    with gzip.open(path, 'r') as f:
-        xml = f.read()
-    return ET.fromstring(xml)
 
 def sample_refs(xml):
     return list(xml.iter('SampleRef'))
@@ -171,6 +166,19 @@ class Sample(object):
         self.rel_path_xml.extend(rel_path_elements(new_path))
         #print(ET.tostring(self.xml))
 
+class Preset(object):
+    def __init__(self, path):
+        self.path = path
+
+        # Un-gzip.
+        with gzip.open(path, 'r') as f:
+            raw_xml = f.read()
+
+        # Parse XML.
+        self.xml = ET.fromstring(raw_xml)
+
+        self.samples = [Sample(sample_xml, library=args.library) for sample_xml in sample_refs(self.xml)]
+
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='Manage sample references in Ableton Live file formats.')
 
@@ -192,37 +200,32 @@ if __name__ == '__main__':
     # Set dry-run
     dry_run = args.dry_run
 
-    # Go through input files and expand folders.
-    files = []
-    for file_path in args.file:
-        if os.path.isdir(file_path):
-            files += find_files(file_path)
-        else:
-            files.append(file_path)
-
     # Check to make sure library path provided is valid.
     if args.library:
         validate_library(args.library)
 
-    samples_by_file = {}
+    # Go through input files and expand folders.
+    files = []
+    for arg_file in args.file:
+        if os.path.isdir(arg_file):
+            files += find_presets(arg_file)
+        else:
+            files.append(arg_file)
 
-    for file_path in files:
-        file_xml = open_file(file_path)
-        samples = [Sample(sample_xml, library=args.library) for sample_xml in sample_refs(file_xml)]
-        samples_by_file[file_path] = samples
+    presets = [Preset(file_path) for file_path in files]
 
     if args.action == 'check':
-        for (file_path, samples) in samples_by_file.items():
-            print('\nFile %s:' % (file_path))
-            num_samples = len(samples)
-            for (i, sample) in enumerate(samples):
+        for preset in presets:
+            print('\nFile %s:' % (preset.path))
+            num_samples = len(preset.samples)
+            for (i, sample) in enumerate(preset.samples):
                 print('\nSample %d/%d, %s, %s' % (i + 1, num_samples, sample.name, sample.abs_path))
                 print('Exists: %s' % sample.exists)
     elif args.action == 'sync':
-        for (file_path, samples) in samples_by_file.items():
-            print('\nFile %s:' % (file_path))
-            num_samples = len(samples)
-            for (i, sample) in enumerate(samples):
+        for preset in presets:
+            print('\nFile %s:' % (preset.path))
+            num_samples = len(preset.samples)
+            for (i, sample) in enumerate(preset.samples):
                 print('\nSample %d/%d, %s' % (i + 1, num_samples, sample.name))
 
-                sync(file_path, sample, args.preset_base, args.sample_base)
+                sync(preset.path, sample, args.preset_base, args.sample_base)
