@@ -168,7 +168,7 @@ class Sample(object):
     def set_path(self, new_path):
         self.rel_path_xml.clear()
         self.rel_path_xml.extend(rel_path_elements(new_path))
-        print(ET.tostring(self.xml))
+        #print(ET.tostring(self.xml))
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='Manage sample references in Ableton Live file formats.')
