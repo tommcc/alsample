@@ -94,9 +94,25 @@ def move_sample(src, dest):
     if os.path.isfile(src_asd):
         move_file(src_asd, asd(dest))
 
-def xml_to_relative_path(path_xml):
+def split_dirs(path):
+    parts = []
+
+    while True:
+        path, part = os.path.split(path)
+        if not part:
+            break
+        parts.append(part)
+
+    parts.reverse()
+    return parts
+
+def parse_rel_path(path_xml):
     parts = [part.get('Dir') for part in path_xml.findall('RelativePathElement')]
     return os.path.join(*parts)
+
+def rel_path_elements(path):
+    parts = split_dirs(path)
+    return [ET.Element('RelativePathElement', {'Dir': part}) for part in parts]
 
 def sync(preset_path, sample, preset_base, sample_base):
     preset_relative_path = os.path.relpath(file_path, args.preset_base)
@@ -138,7 +154,7 @@ class Sample(object):
 
         # Calculate relative path.
         self.relative_path = os.path.join(
-            xml_to_relative_path(self.relative_path_xml),
+            parse_rel_path(self.relative_path_xml),
             self.name
             )
 
@@ -151,10 +167,9 @@ class Sample(object):
         self.exists = os.path.exists(self.absolute_path)
 
     def set_path(self, new_path):
-        #self.relative_path_xml.clear()
-        for relpath_xml in self.relative_path_xml.findall('RelativePathElement'):
-            self.relative_path_xml.remove(relpath_xml)
-        print(ET.tostring(self.xml, pretty_print=True))
+        self.relative_path_xml.clear()
+        self.relative_path_xml.extend(rel_path_elements(new_path))
+        print(ET.tostring(self.xml))
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='Manage sample references in Ableton Live file formats.')
