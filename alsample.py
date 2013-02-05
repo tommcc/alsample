@@ -35,17 +35,6 @@ FILE_TYPES_REGEX = re.compile(
 class LibraryException(Exception):
     pass
 
-def find_presets(path):
-    results = []
-    for root, dirs, files in os.walk(path):
-        for f in files:
-            if FILE_TYPES_REGEX.search(f):
-                results.append(os.path.join(root, f))
-    return results
-
-def sample_refs(xml):
-    return list(xml.iter('SampleRef'))
-
 def validate_library(path):
     if not os.path.exists(path):
         raise LibraryException('Library path not found.')
@@ -53,6 +42,14 @@ def validate_library(path):
     check_path = os.path.join(path, 'Ableton Project Info', 'AbletonLibrary.ini')
     if not os.path.exists(check_path):
         raise LibraryException('Library path does not appear to be a valid Ableton Library.')
+
+def find_presets(path):
+    results = []
+    for root, dirs, files in os.walk(path):
+        for f in files:
+            if FILE_TYPES_REGEX.search(f):
+                results.append(os.path.join(root, f))
+    return results
 
 def mkdir_p(path):
     try:
@@ -100,6 +97,9 @@ def split_dirs(path):
     parts.reverse()
     return parts
 
+def find_samples(xml):
+    return list(xml.iter('SampleRef'))
+
 def parse_rel_path(xml):
     parts = [part.get('Dir') for part in xml.findall('RelativePathElement')]
     return os.path.join(*parts)
@@ -128,14 +128,13 @@ def sync(preset_path, sample, preset_base, sample_base):
         move_sample(sample.abs_path, expected_path)
 
         # Update xml to point to new location.
-        ref_path = os.path.relpath(expected_path, sample.library)
+        ref_path = os.path.relpath(expected_path, library)
         print('ref path %s' % ref_path)
         sample.set_path(ref_path)
 
 class Sample(object):
-    def __init__(self, xml, library=''):
+    def __init__(self, xml):
         self.xml = xml
-        self.library = os.path.abspath(library)
 
         self.file_ref_xml = self.xml.find('FileRef')
 
@@ -155,7 +154,7 @@ class Sample(object):
 
         # Calculate abs path.
         if self.path_type == PATH_TYPE_LIBRARY:
-            self.abs_path = os.path.join(self.library, self.rel_path)
+            self.abs_path = os.path.join(library, self.rel_path)
         #TODO Handle other relative path types?
 
         # Set if the sample could be found.
@@ -177,7 +176,7 @@ class Preset(object):
         # Parse XML.
         self.xml = ET.fromstring(raw_xml)
 
-        self.samples = [Sample(sample_xml, library=args.library) for sample_xml in sample_refs(self.xml)]
+        self.samples = [Sample(sample_xml) for sample_xml in find_samples(self.xml)]
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='Manage sample references in Ableton Live file formats.')
@@ -203,6 +202,7 @@ if __name__ == '__main__':
     # Check to make sure library path provided is valid.
     if args.library:
         validate_library(args.library)
+        library = os.path.abspath(args.library)
 
     # Go through input files and expand folders.
     files = []
