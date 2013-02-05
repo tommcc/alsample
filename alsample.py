@@ -74,18 +74,18 @@ def move_file(src, dst):
     else:
         print('Moving file:\n\tsrc : %s\n\tdest: %s' % (src, dst))
 
-        # Create destination directory if needed.
-        dst_path = os.path.split(dst)[0]
-        mkdir_p(dst_path)
-
-        #shutil.move(src, dest)
         #TODO: replace with move after development.
         shutil.copy2(src, dst)
+        # shutil.move(src, dest)
 
 def asd(path):
     return '%s.asd' % path
 
 def move_sample(src, dst):
+    # Make sure destination dir exists.
+    mkdir_p(os.path.dirname(dst))
+
+    # Move sample.
     move_file(src, dst)
 
     # Move accompanying .asd if it exists.
