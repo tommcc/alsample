@@ -133,7 +133,9 @@ def sync(preset_path, sample, preset_base, sample_base):
         move_sample(sample.abs_path, expected_path)
 
         # Update xml to point to new location.
-        sample.set_path(expected_path)
+        ref_path = os.path.relpath(expected_path, sample.library)
+        print('ref path %s' % ref_path)
+        sample.set_path(ref_path)
 
 
 class Sample(object):
