@@ -49,7 +49,7 @@ def open_file(path):
         xml = f.read()
     return ET.fromstring(xml)
 
-def get_sample_refs(xml):
+def sample_refs(xml):
     return list(xml.iter('SampleRef'))
 
 def validate_library_path(library_path):
@@ -94,6 +94,10 @@ def move_sample(src, dest):
     if os.path.isfile(src_asd):
         move_file(src_asd, asd(dest))
 
+def xml_to_relative_path(path_xml):
+    parts = [part.get('Dir') for part in path_xml.findall('RelativePathElement')]
+    return os.path.join(*parts)
+
 def sync(preset_path, sample, preset_base, sample_base):
     preset_relative_path = os.path.relpath(file_path, args.preset_base)
     # Strip extension from preset name
@@ -127,25 +131,24 @@ class Sample(object):
         self.name_xml = self.file_ref_xml.find('Name')
         self.name = self.name_xml.get('Value')
 
-        self.relative_path_type_xml = self.file_ref_xml.find('RelativePathType')
-        self.relative_path_type = int(self.relative_path_type_xml.get('Value'))
+        self.path_type_xml = self.file_ref_xml.find('RelativePathType')
+        self.path_type = int(self.path_type_xml.get('Value'))
 
         self.relative_path_xml = self.file_ref_xml.find('RelativePath')
 
         # Calculate relative path.
-        relative_path_elements = [path_element.get('Dir') for path_element in self.relative_path_xml.findall('RelativePathElement')]
-        relative_path_elements.append(self.name)
-        self.relative_path = os.path.join(*relative_path_elements)
+        self.relative_path = os.path.join(
+            xml_to_relative_path(self.relative_path_xml),
+            self.name
+            )
 
         # Calculate abs path.
-        if self.relative_path_type == PATH_TYPE_LIBRARY:
+        if self.path_type == PATH_TYPE_LIBRARY:
             self.absolute_path = os.path.abspath(os.path.join(self.library, self.relative_path))
         #TODO Handle other relative path types?
 
         # Set if the sample could be found.
         self.exists = os.path.exists(self.absolute_path)
-
-        self.path_hint_xml = self.file_ref_xml.find('./SearchHint/PathHint')
 
     def set_path(self, new_path):
         #self.relative_path_xml.clear()
@@ -190,7 +193,7 @@ if __name__ == '__main__':
 
     for file_path in files:
         file_xml = open_file(file_path)
-        samples = [Sample(sample_xml, library=args.library) for sample_xml in get_sample_refs(file_xml)]
+        samples = [Sample(sample_xml, library=args.library) for sample_xml in sample_refs(file_xml)]
         samples_by_file[file_path] = samples
 
     if args.action == 'check':
