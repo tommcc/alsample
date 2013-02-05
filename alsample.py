@@ -38,7 +38,6 @@ class LibraryException(Exception):
 def find_files(path):
     results = []
     for root, dirs, files in os.walk(path):
-        #print ('root %s, dirs %s, files %s' % (root, dirs, files))
         for f in files:
             if FILE_TYPES_REGEX.search(f):
                 results.append(os.path.join(root, f))
@@ -52,12 +51,12 @@ def open_file(path):
 def sample_refs(xml):
     return list(xml.iter('SampleRef'))
 
-def validate_library_path(library_path):
-    if not os.path.exists(library_path):
+def validate_library(path):
+    if not os.path.exists(path):
         raise LibraryException('Library path not found.')
 
-    library_check_path = os.path.join(library_path, 'Ableton Project Info', 'AbletonLibrary.ini')
-    if not os.path.exists(library_check_path):
+    check_path = os.path.join(path, 'Ableton Project Info', 'AbletonLibrary.ini')
+    if not os.path.exists(check_path):
         raise LibraryException('Library path does not appear to be a valid Ableton Library.')
 
 def mkdir_p(path):
@@ -69,30 +68,30 @@ def mkdir_p(path):
         else:
             raise
 
-def move_file(src, dest):
+def move_file(src, dst):
     if dry_run:
-        print('Would move file:\n\tsrc : %s\n\tdest: %s' % (src, dest))
+        print('Would move file:\n\tsrc : %s\n\tdest: %s' % (src, dst))
     else:
-        print('Moving file:\n\tsrc : %s\n\tdest: %s' % (src, dest))
+        print('Moving file:\n\tsrc : %s\n\tdest: %s' % (src, dst))
 
         # Create destination directory if needed.
-        dest_path = os.path.split(dest)[0]
-        mkdir_p(dest_path)
+        dst_path = os.path.split(dst)[0]
+        mkdir_p(dst_path)
 
         #shutil.move(src, dest)
         #TODO: replace with move after development.
-        shutil.copy2(src, dest)
+        shutil.copy2(src, dst)
 
 def asd(path):
     return '%s.asd' % path
 
-def move_sample(src, dest):
-    move_file(src, dest)
+def move_sample(src, dst):
+    move_file(src, dst)
 
     # Move accompanying .asd if it exists.
     src_asd = asd(src)
     if os.path.isfile(src_asd):
-        move_file(src_asd, asd(dest))
+        move_file(src_asd, asd(dst))
 
 def split_dirs(path):
     parts = []
@@ -115,23 +114,23 @@ def rel_path_elements(path):
     return [ET.Element('RelativePathElement', {'Dir': part}) for part in parts]
 
 def sync(preset_path, sample, preset_base, sample_base):
-    preset_relative_path = os.path.relpath(file_path, args.preset_base)
+    preset_rel_path = os.path.relpath(file_path, args.preset_base)
     # Strip extension from preset name
-    preset_relative_path = os.path.splitext(preset_relative_path)[0]
-    print('preset relative path is %s' % preset_relative_path)
+    preset_rel_path = os.path.splitext(preset_rel_path)[0]
+    print('preset relative path is %s' % preset_rel_path)
 
-    sample_tail = os.path.split(sample.relative_path)[1]
-    expected_path = os.path.join(args.sample_base, preset_relative_path, sample_tail)
+    sample_name = os.path.split(sample.rel_path)[1]
+    expected_path = os.path.join(args.sample_base, preset_rel_path, sample_name)
     expected_path = os.path.abspath(expected_path)
     print('expected path is %s' % expected_path)
-    print('actual path is %s' % sample.absolute_path)
+    print('actual path is %s' % sample.abs_path)
 
-    path_is_correct = sample.absolute_path == expected_path
+    path_is_correct = sample.abs_path == expected_path
     print('correct path? %s' % path_is_correct)
 
     if not path_is_correct:
         # Move file to correct location.
-        move_sample(sample.absolute_path, expected_path)
+        move_sample(sample.abs_path, expected_path)
 
         # Update xml to point to new location.
         sample.set_path(expected_path)
@@ -150,25 +149,25 @@ class Sample(object):
         self.path_type_xml = self.file_ref_xml.find('RelativePathType')
         self.path_type = int(self.path_type_xml.get('Value'))
 
-        self.relative_path_xml = self.file_ref_xml.find('RelativePath')
+        self.rel_path_xml = self.file_ref_xml.find('RelativePath')
 
         # Calculate relative path.
-        self.relative_path = os.path.join(
-            parse_rel_path(self.relative_path_xml),
+        self.rel_path = os.path.join(
+            parse_rel_path(self.rel_path_xml),
             self.name
             )
 
         # Calculate abs path.
         if self.path_type == PATH_TYPE_LIBRARY:
-            self.absolute_path = os.path.abspath(os.path.join(self.library, self.relative_path))
+            self.abs_path = os.path.abspath(os.path.join(self.library, self.rel_path))
         #TODO Handle other relative path types?
 
         # Set if the sample could be found.
-        self.exists = os.path.exists(self.absolute_path)
+        self.exists = os.path.exists(self.abs_path)
 
     def set_path(self, new_path):
-        self.relative_path_xml.clear()
-        self.relative_path_xml.extend(rel_path_elements(new_path))
+        self.rel_path_xml.clear()
+        self.rel_path_xml.extend(rel_path_elements(new_path))
         print(ET.tostring(self.xml))
 
 if __name__ == '__main__':
@@ -202,7 +201,7 @@ if __name__ == '__main__':
 
     # Check to make sure library path provided is valid.
     if args.library:
-        validate_library_path(args.library)
+        validate_library(args.library)
 
     samples_by_file = {}
 
@@ -216,7 +215,7 @@ if __name__ == '__main__':
             print('\nFile %s:' % (file_path))
             num_samples = len(samples)
             for (i, sample) in enumerate(samples):
-                print('\nSample %d/%d, %s, %s' % (i + 1, num_samples, sample.name, sample.absolute_path))
+                print('\nSample %d/%d, %s, %s' % (i + 1, num_samples, sample.name, sample.abs_path))
                 print('Exists: %s' % sample.exists)
     elif args.action == 'sync':
         for (file_path, samples) in samples_by_file.items():
