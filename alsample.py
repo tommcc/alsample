@@ -105,8 +105,8 @@ def split_dirs(path):
     parts.reverse()
     return parts
 
-def parse_rel_path(path_xml):
-    parts = [part.get('Dir') for part in path_xml.findall('RelativePathElement')]
+def parse_rel_path(xml):
+    parts = [part.get('Dir') for part in xml.findall('RelativePathElement')]
     return os.path.join(*parts)
 
 def rel_path_elements(path):
@@ -136,7 +136,6 @@ def sync(preset_path, sample, preset_base, sample_base):
         ref_path = os.path.relpath(expected_path, sample.library)
         print('ref path %s' % ref_path)
         sample.set_path(ref_path)
-
 
 class Sample(object):
     def __init__(self, xml, library=''):
