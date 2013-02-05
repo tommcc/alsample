@@ -113,15 +113,15 @@ def rel_path_elements(path):
     parts = split_dirs(path)
     return [ET.Element('RelativePathElement', {'Dir': part}) for part in parts]
 
+def strip_ext(path):
+    return os.path.splitext(path)[0]
+
 def sync(preset_path, sample, preset_base, sample_base):
-    preset_rel_path = os.path.relpath(file_path, args.preset_base)
-    # Strip extension from preset name
-    preset_rel_path = os.path.splitext(preset_rel_path)[0]
+    #TODO Don't assume there is only a single preset referring to this sample.
+    preset_rel_path = os.path.relpath(strip_ext(preset_path), args.preset_base)
     print('preset relative path is %s' % preset_rel_path)
 
-    sample_name = os.path.split(sample.rel_path)[1]
-    expected_path = os.path.join(args.sample_base, preset_rel_path, sample_name)
-    expected_path = os.path.abspath(expected_path)
+    expected_path = os.path.abspath(os.path.join(args.sample_base, preset_rel_path, sample.name))
     print('expected path is %s' % expected_path)
     print('actual path is %s' % sample.abs_path)
 
