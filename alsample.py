@@ -139,7 +139,7 @@ def sync(preset_path, sample, preset_base, sample_base):
 class Sample(object):
     def __init__(self, xml, library=''):
         self.xml = xml
-        self.library = library
+        self.library = os.path.abspath(library)
 
         self.file_ref_xml = self.xml.find('FileRef')
 
@@ -159,7 +159,7 @@ class Sample(object):
 
         # Calculate abs path.
         if self.path_type == PATH_TYPE_LIBRARY:
-            self.abs_path = os.path.abspath(os.path.join(self.library, self.rel_path))
+            self.abs_path = os.path.join(self.library, self.rel_path)
         #TODO Handle other relative path types?
 
         # Set if the sample could be found.
