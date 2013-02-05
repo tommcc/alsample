@@ -136,15 +136,14 @@ class Sample(object):
     def __init__(self, xml):
         self.xml = xml
 
-        self.file_ref_xml = self.xml.find('FileRef')
+        file_ref_xml = self.xml.find('FileRef')
 
-        self.name_xml = self.file_ref_xml.find('Name')
-        self.name = self.name_xml.get('Value')
+        self.name = file_ref_xml.find('Name').get('Value')
 
-        self.path_type_xml = self.file_ref_xml.find('RelativePathType')
-        self.path_type = int(self.path_type_xml.get('Value'))
+        path_type_xml = file_ref_xml.find('RelativePathType')
+        self.path_type = int(path_type_xml.get('Value'))
 
-        self.rel_path_xml = self.file_ref_xml.find('RelativePath')
+        self.rel_path_xml = file_ref_xml.find('RelativePath')
 
         # Calculate relative path.
         self.rel_path = os.path.join(
